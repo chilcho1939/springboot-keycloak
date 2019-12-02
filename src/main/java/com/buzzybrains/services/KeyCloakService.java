@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
 import javax.ws.rs.core.Response;
@@ -23,9 +24,11 @@ import org.keycloak.admin.client.resource.UsersResource;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import com.buzzybrains.User;
 import com.buzzybrains.model.UserCredentials;
 import com.buzzybrains.model.UserDTO;
 
@@ -43,6 +46,9 @@ public class KeyCloakService {
 
 	@Value("${keycloak.realm}")
 	private String REALM;
+	
+	@Autowired
+	private UserRepository userRepository;
 
 	public String getToken(UserCredentials userCredentials) {
 
@@ -129,11 +135,20 @@ public class KeyCloakService {
 				for(RoleRepresentation aux : realmResource.roles().list()) {
 					System.out.println("nombre rol: " + aux.getName());
 				} 
-				RoleRepresentation savedRoleRepresentation = realmResource.roles().get("manager").toRepresentation();
+				RoleRepresentation savedRoleRepresentation = realmResource.roles().get("user").toRepresentation();
 				
 				realmResource.users().get(userId).roles().realmLevel().add(Arrays.asList(savedRoleRepresentation));
 
 				System.out.println("Username==" + userDTO.getUserName() + " created in keycloak successfully");
+				User usuario = new User();
+				usuario.setUsername(userDTO.getUserName());
+				usuario.setPassword(userDTO.getPassword());
+				usuario.setEmail(userDTO.getEmailAddress());
+				usuario.setCreateTime(new Date());
+				usuario.setCreateUser("admin");
+				usuario.setUpdateUser("admin");
+				usuario.setUpdateTime(new Date());
+				userRepository.save(usuario);
 
 			}
 
